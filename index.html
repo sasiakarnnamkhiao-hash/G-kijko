@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ta Ray - ร้านรับฝากขายและหาไอดีครบวงจร 🎮</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Mitr:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* แก้ไขเรื่องฟอนต์และการเว้นวรรคตัวอักษร ให้กระชับ */
+* { margin: 0; padding: 0; box-sizing: border-box; letter-spacing: 0px !important; }
+:root {
+  /* ปรับโทนสีตามธีมเดิมของพี่ Eoy */
+  --pk: #ff80b5; --pk2: #ffb6d9; --pk3: #e8407a;
+  --bg: #0a0510; --bg2: #12091d; --bg3: #1a0d2a;
+  --txt2: rgba(255,255,255,0.7); --txt3: rgba(255,255,255,0.42);
+  --primary: #2b59ff; --primary-light: #6e8fff; --primary-dark: #1a36a3;
+  --blue-bg: #050a1f; --blue-bg2: #0d1633; --blue-bg3: #16224a;
+  --glow: rgba(43, 89, 255, 0.4);
+  /* ใส่ลูกเล่นกระจกนัวๆ (Glassmorphism) */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(10px);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Kanit', sans-serif;
+  background: var(--blue-bg); color: #fff;
+  overflow-x: hidden;
+}
+
+/* Particles คงเดิมตามที่พี่ Eoy ชอบ */
+#pts { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.pt { position: absolute; animation: ptUp linear infinite; opacity: 0; }
+@keyframes ptUp {
+0%   { transform: translateY(105vh); opacity: 0; }
+8%   { opacity: 0.45; }
+92%  { opacity: 0.45; }
+100% { transform: translateY(-8vh) rotate(360deg); opacity: 0; }
+}
+
+/* Topbar แบบกระจกนัวๆ */
+.topbar {
+position: sticky; top: 0; z-index: 100;
+background: var(--glass-bg);
+border-bottom: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+box-shadow: 0 2px 20px rgba(43,89,255,0.1);
+display: flex; align-items: center; justify-content: space-between;
+padding: 0 24px; height: 56px;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.ham {
+width: 38px; height: 38px;
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+gap: 5px; cursor: pointer; padding: 5px;
+border-radius: 8px;
+border: 1.5px solid rgba(43,89,255,0.3);
+background: rgba(43,89,255,0.08);
+transition: background .2s, box-shadow .2s;
+flex-shrink: 0;
+}
+.ham:hover { background: rgba(43,89,255,0.18); box-shadow: 0 0 12px rgba(43,89,255,0.3); }
+.ham span {
+display: block; width: 18px; height: 2.5px;
+background: #fff; border-radius: 2px;
+transition: transform .3s, opacity .3s, width .3s;
+transform-origin: center;
+}
+.ham.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.ham.open span:nth-child(2) { opacity: 0; width: 0; }
+.ham.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+.topbar-brand {
+font-family: 'Mitr', sans-serif;
+font-size: 20px; font-weight: 700;
+color: #ffffff;
+text-shadow: 0 0 16px rgba(43,89,255,0.5);
+letter-spacing: 0.5px;
+}
+.topbar-brand span { color: var(--primary-light); }
+
+.topbar-right { display: flex; gap: 8px; }
+.tb-link {
+padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+text-decoration: none; color: #fff;
+border: 1px solid rgba(43,89,255,0.25);
+background: rgba(43,89,255,0.05);
+transition: all .2s;
+}
+.tb-link:hover { background: rgba(43,89,255,0.18); border-color: rgba(43,89,255,0.5); box-shadow: 0 0 10px rgba(43,89,255,0.2); }
+
+/* Drawer แบบกระจกนัวๆ ละมุนๆ */
+.overlay {
+position: fixed; inset: 0; z-index: 200;
+background: rgba(0,0,0,0);
+pointer-events: none;
+transition: background .3s;
+}
+.overlay.open { background: rgba(0,0,0,0.4); pointer-events: all; }
+
+.drawer {
+position: fixed; top: 0; left: 0; z-index: 201;
+width: 220px; height: 100vh;
+background: var(--glass-bg);
+border-right: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+box-shadow: 6px 0 30px rgba(0,0,0,0.3);
+display: flex; flex-direction: column; align-items: center;
+padding: 28px 0 20px;
+transform: translateX(-100%);
+transition: transform .32s cubic-bezier(.4,0,.2,1);
+}
+.drawer.open { transform: translateX(0); }
+
+.dr-av {
+width: 68px; height: 68px; border-radius: 50%;
+background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+border: 3px solid rgba(43,89,255,0.5);
+display: flex; align-items: center; justify-content: center;
+font-size: 28px; margin-bottom: 7px;
+box-shadow: 0 0 22px rgba(43,89,255,0.3);
+animation: glow 3s ease-in-out infinite;
+}
+@keyframes glow {
+0%,100% { box-shadow: 0 0 22px rgba(43,89,255,0.3); }
+50%      { box-shadow: 0 0 40px rgba(43,89,255,0.6); }
+}
+.dr-name {
+font-size: 10px; font-weight: 700; color: var(--primary-light);
+letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px;
+}
+.dr-nav { width: 100%; }
+.dr-a {
+display: flex; align-items: center; gap: 11px;
+padding: 12px 22px;
+color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;
+text-decoration: none; position: relative;
+transition: color .2s, background .2s;
+}
+.dr-a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.dr-a.on {
+color: #fff;
+background: linear-gradient(90deg, rgba(43,89,255,0.12), transparent);
+}
+.dr-a.on::before {
+content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+background: var(--primary); border-radius: 0 2px 2px 0;
+}
+.dr-a .ico { font-size: 15px; width: 18px; text-align: center; }
+
+/* Page */
+.page { position: relative; z-index: 1; min-height: 100vh; }
+
+/* Hero คงเดิม ไม่เปลี่ยนจนหน้าต่างไปเยอะ */
+.hero {
+background: linear-gradient(135deg, #050a1f 0%, #0d1633 35%, #1a36a3 70%, #2b59ff 100%);
+padding: 36px 32px 28px;
+position: relative;
+min-height: 200px;
+display: flex; align-items: flex-end; justify-content: space-between;
+}
+.hero-txt { position: relative; z-index: 2; }
+.hero-tag {
+display: inline-block;
+background: rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+border: 1px solid rgba(255,255,255,0.1);
+padding: 3px 13px; border-radius: 20px;
+font-size: 11px; color: #fff; margin-bottom: 8px;
+}
+.hero-title {
+font-family: 'Mitr', sans-serif;
+font-size: 52px; font-weight: 700; line-height: 1.1;
+background: linear-gradient(135deg, #fff 0%, #b6ccff 50%, #2b59ff 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+filter: drop-shadow(0 0 20px rgba(43,89,255,0.4)) drop-shadow(2px 3px 6px rgba(0,0,0,0.3));
+}
+.hero-sub { font-size: 12px; color: rgba(255,255,255,0.7); letter-spacing: 3px; margin-top: 5px; }
+.hero-deco-img { 
+  width: 100px; height: 100px; 
+  object-fit: cover; 
+  border-radius: 12px; 
+  border: 2px solid rgba(43,89,255,0.4);
+  box-shadow: 0 0 15px rgba(43,89,255,0.3);
+  position: relative; z-index: 2; align-self: flex-end;
+}
+
+.hero-wave {
+width: 100%; height: 32px; overflow: hidden; background: var(--blue-bg); position: relative;
+}
+.hero-wave::before {
+content: ''; position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+background: linear-gradient(135deg, #050a1f, #1a36a3, #2b59ff);
+border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+
+/* Content แบบกระจกนัวๆ ละมุนๆ */
+.content { max-width: 860px; margin: 0 auto; padding: 24px 28px 50px; }
+
+/* Scroll offset for sticky topbar */
+[id] { scroll-margin-top: 66px; }
+
+.sh {
+display: flex; align-items: center; gap: 10px;
+background: linear-gradient(90deg, rgba(13, 22, 51, 0.6) 0%, rgba(8, 17, 43, 0.4) 60%, transparent 100%);
+border-left: 4px solid rgba(43,89,255,0.6);
+border-radius: 0 12px 12px 0;
+padding: 11px 18px; margin-bottom: 16px;
+}
+.sh .ico { font-size: 18px; }
+.sh h2 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+.sh span { font-size: 12px; color: var(--primary-light); font-weight: 500; }
+
+/* Cards แบบกระจกนัวๆ ละมุนๆ */
+.cards { display: flex; gap: 14px; margin-bottom: 22px; }
+.card {
+flex: 1 1 0; min-width: 0;
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-radius: 14px; padding: 18px 16px;
+transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.card:hover { transform: translateY(-3px); border-color: rgba(43,89,255,0.3); box-shadow: 0 8px 28px rgba(43,89,255,0.15); }
+.c-ico { font-size: 36px; margin-bottom: 12px; filter: drop-shadow(0 0 6px rgba(43,89,255,0.3)); }
+.c-ttl { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.c-dsc { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.65; }
+
+/* Box แบบกระจกนัวๆ ละมุนๆ */
+.box {
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
+}
+.box-label { font-size: 13px; font-weight: 700; color: var(--primary-light); margin-bottom: 12px; }
+.badges { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.b-n { background: rgba(43,89,255,0.08); border: 1px solid rgba(43,89,255,0.2); color: var(--primary-light); }
+.b-u { background: rgba(255,130,60,0.08); border: 1px solid rgba(255,130,60,0.2); color: #ffaa70; }
+.note { font-size: 11px; color: var(--txt3); }
+
+/* Steps */
+.steps { display: flex; flex-direction: column; gap: 14px; }
+.step { display: flex; gap: 13px; align-items: flex-start; }
+.sn {
+width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+background: linear-gradient(135deg, var(--primary), var(--primary-light));
+display: flex; align-items: center; justify-content: center;
+font-size: 11px; font-weight: 800;
+box-shadow: 0 2px 10px rgba(43,89,255,0.2);
+}
+.st { font-size: 13px; color: var(--txt2); line-height: 1.65; padding-top: 3px; }
+.st strong { color: var(--primary-light); }
+
+/* Course แบบกระจกนัวๆ */
+.course {
+display: flex; align-items: center; gap: 16px;
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-radius: 14px; padding: 18px 20px; margin-bottom: 18px;
+text-decoration: none; color: #fff;
+transition: transform .25s, box-shadow .25s;
+}
+.course:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(43,89,255,0.15); }
+.c-emj { font-size: 36px; flex-shrink: 0; }
+.c-inf { flex: 1; min-width: 0; }
+.c-inf-t { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.c-inf-d { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+.c-price {
+background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+padding: 8px 16px; border-radius: 20px;
+font-size: 16px; font-weight: 800; text-align: center; flex-shrink: 0;
+box-shadow: 0 4px 14px rgba(43,89,255,0.2);
+white-space: nowrap;
+}
+.c-price small { font-size: 10px; display: block; font-weight: 400; opacity: 0.8; }
+
+/* Rules แบบกระจกนัวๆ */
+.rules-box {
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-radius: 14px; padding: 18px 22px; margin-bottom: 18px;
+}
+.rule {
+display: flex; gap: 10px; align-items: flex-start;
+padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+font-size: 13px; color: var(--txt2); line-height: 1.65;
+}
+.rule:last-child { border-bottom: none; }
+
+.warn {
+display: flex; align-items: flex-start; gap: 10px;
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-left: 4px solid #ffcc00; border-radius: 0 12px 12px 0;
+padding: 11px 16px; margin-bottom: 18px;
+font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.6;
+}
+
+/* Rate Tables */
+.rate-table-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.rate-col { flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; font-size: 12px; }
+.rate-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+/* Images */
+.rate-img { width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(43,89,255,0.3); }
+
+/* Contact แบบกระจกนัวๆ */
+.contact-box {
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+backdrop-filter: var(--glass-blur);
+border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
+}
+.contact-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.contact-hd h3 { font-size: 14px; font-weight: 700; color: var(--primary-light); }
+.ct-link {
+display: flex; align-items: center; gap: 13px;
+padding: 11px 14px;
+background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+border-radius: 11px; text-decoration: none; color: #fff;
+font-size: 13px; margin-bottom: 10px;
+transition: background .2s, border-color .2s, transform .2s;
+}
+.ct-link:last-child { margin-bottom: 0; }
+.ct-link:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateX(3px); }
+.ct-ico { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.ct-inf { flex: 1; }
+.ct-t { font-weight: 700; font-size: 13px; }
+.ct-u { font-size: 11px; color: var(--txt3); margin-top: 1px; word-break: break-all; }
+.ct-arr { color: var(--primary-light); }
+
+/* Footer */
+.footer {
+background: var(--blue-bg); border-top: 1px solid rgba(255,255,255,0.05);
+padding: 20px 28px;
+display: flex; flex-direction: column; align-items: center; gap: 12px;
+position: relative; z-index: 1;
+}
+.footer-text { font-size: 12px; color: var(--txt3); text-align: center; }
+.ft-links { display: flex; gap: 12px; justify-content: center; }
+.ft-a {
+display: flex; align-items: center; gap: 6px;
+padding: 8px 20px; border-radius: 20px;
+border: 1px solid rgba(255,255,255,0.1);
+color: #fff; text-decoration: none; font-size: 13px; font-weight: 600;
+background: rgba(255,255,255,0.03);
+transition: all .2s;
+}
+.ft-a:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); box-shadow: 0 0 12px rgba(255,255,255,0.1); }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--blue-bg); }
+::-webkit-scrollbar-thumb { background: rgba(43,89,255,0.4); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="pts"></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="ham" id="hamBtn" onclick="toggleDrawer()">
+      <span></span><span></span><span></span>
+    </div>
+    <span class="topbar-brand">Ta<span>Ray</span> รับฝากขาย</span>
+  </div>
+  <div class="topbar-right">
+    <a class="tb-link" href="https://www.facebook.com/share/1HXq3wncat/?mibextid=wwXIfr" target="_blank">📘 Facebook</a>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<div class="drawer" id="drawer">
+  <div class="dr-av">🎮</div>
+  <div class="dr-name">Ta Ray Store</div>
+  <nav class="dr-nav">
+    <a class="dr-a on" data-target="top"><span class="ico">🏠</span><span>Home</span></a>
+    <a class="dr-a" data-target="rates"><span class="ico">💰</span><span>เรทราคา</span></a>
+    <a class="dr-a" data-target="how-to"><span class="ico">📋</span><span>วิธีสั่งซื้อ</span></a>
+    <a class="dr-a" data-target="contact"><span class="ico">💬</span><span>ติดต่อ</span></a>
+  </nav>
+</div>
+
+<div class="page" id="top">
+  <div class="hero">
+    <div class="hero-txt">
+      <div class="hero-tag">✨ บริการรับฝากขาย / หาไอดีครบวงจร</div>
+      <div class="hero-title">Ta Ray</div>
+      <div class="hero-sub">ร้าน Ta Ray รับฝากขายและบริการป้ายครบวงจร</div>
+    </div>
+    <img src="IMG_7201.jpeg" alt="Character" class="hero-deco-img">
+  </div>
+  <div class="hero-wave"></div>
+
+  <div class="content">
+    <div id="services">
+      <div class="sh"><span class="ico">🛠️</span><h2>บริการของร้าน</h2></div>
+      <div class="box">
+        <p style="font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.7; text-align: center;">
+          ร้าน Ta Ray รับฝากขาย, รับทำป้ายฝากขาย, ป้ายเรทต่างๆ, ป้ายคิวอาร์,<br>ปกเครดิต (ป้ายไอดียังไม่รับทำ) และรับหาไอดี ครับผม
+        </p>
+      </div>
+    </div>
+
+    <div id="rates">
+      <div class="sh"><span class="ico">🖼️</span><h2>เรทราคาฝากขาย</h2><span class="ico">TABAY</span></div>
+      <div class="box">
+        <div class="rate-table-container">
+          <div class="rate-col">
+            <div class="rate-item"><span>500 – 900</span> <span>15 B</span></div>
+            <div class="rate-item"><span>1000 – 1499</span> <span>25 B</span></div>
+            <div class="rate-item"><span>1500 – 1999</span> <span>30 B</span></div>
+            <div class="rate-item"><span>2000 – 2499</span> <span>45 B</span></div>
+            <div class="rate-item"><span>2500 – 4499</span> <span>57 B</span></div>
+            <div class="rate-item"><span>4500 – 5999</span> <span>65 B</span></div>
+            <div class="rate-item"><span>6000 – 7500</span> <span>80 B</span></div>
+            <div class="rate-item"><span>7501 – 8500</span> <span>95 B</span></div>
+          </div>
+          <div class="rate-col">
+            <div class="rate-item"><span>8501 – 9999</span> <span>145 B</span></div>
+            <div class="rate-item"><span>10,000+</span> <span>1.9%</span></div>
+            <div class="rate-item"><span>14,000+</span> <span>2.5%</span></div>
+            <div class="rate-item"><span>19,000+</span> <span>3.5%</span></div>
+            <div class="rate-item"><span>30,000+</span> <span>4.5%</span></div>
+            <div class="rate-item"><span>50,000+</span> <span>4.7%</span></div>
+            <div class="rate-item"><span>70,000+</span> <span>5%</span></div>
+            <div class="rate-item"><span>100,000</span> <span>5.5%</span></div>
+          </div>
+        </div>
+        <p style="margin-top:10px; color:#ff8080; font-size:12px; text-align:center;">* หมายเหตุ: คนที่เพิ่งใช้บริการจ่ายก่อนทุกกรณี</p>
+        <img src="att.qinRJRdZk5uRPfzTV5LLWtC3_BvNc47dYtI2am68Mtc.jpeg" alt="Rate Card" class="rate-img">
+      </div>
+
+      <div class="sh"><span class="ico">🔍</span><h2>เรทราคาหาไอดี</h2><span class="ico">Ta Ray</span></div>
+      <div class="box">
+        <div class="rate-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="rate-col" style="flex: none; width: 100%;">
+            <div class="rate-item"><span>1 – 900</span> <span>40 B</span></div>
+            <div class="rate-item"><span>901 – 1900</span> <span>57 B</span></div>
+            <div class="rate-item"><span>1901 – 3500</span> <span>75 B</span></div>
+            <div class="rate-item"><span>3501 – 6000</span> <span>90 B</span></div>
+            <div class="rate-item"><span>6001 – 9000</span> <span>120 B</span></div>
+            <div class="rate-item"><span>9001 – 9,999</span> <span>145 B</span></div>
+          </div>
+          <div class="rate-col" style="flex: none; width: 100%;">
+            <div class="rate-item"><span>10,000+++</span> <span>170 B</span></div>
+            <div class="rate-item"><span>15,000+++</span> <span>200 B</span></div>
+            <div class="rate-item"><span>30,000+++</span> <span>250 B</span></div>
+            <div class="rate-item"><span>50,000+++</span> <span>275 B</span></div>
+            <div class="rate-item"><span>100,000+++</span> <span>300 B</span></div>
+          </div>
+        </div>
+        <img src="IMG_0154.jpeg" alt="Find ID Rate" class="rate-img">
+      </div>
+    </div>
+
+    <div id="how-to">
+      <div class="sh"><span class="ico">📋</span><h2>ขั้นตอนการสั่งซื้อ</h2></div>
+      <div class="box">
+        <div style="font-size:14px; color:rgba(255,255,255,0.8); line-height:2;">
+            1. ทักแชทแจ้งความต้องการ (หาไอดี / ฝากขาย / ทำป้ายเรท)<br>
+            2. ส่งรายละเอียดตามบรีฟ ฟอร์ม หรือรูปภาพที่ต้องใช้ทำป้าย<br>
+            3. ชำระเงินตามเรทราคาที่ตกลง (ชำระก่อนเริ่มงาน)<br>
+            4. รอรับงานและเช็คคิวผ่านหน้าเว็บได้เลยครับ
+        </div>
+        <a class="course" style="margin-top: 15px; border-radius: 10px; padding: 12px;" href="https://docs.google.com/spreadsheets/d/1-kKlNjdrTLPbQ0ogYQt7Fb-QtCoLyMmX0H57NfEOMwA/edit?usp=drivesdk" target="_blank">
+          <span>📑</span> เช็คคิวงานร้าน Ta Ray ที่นี่
+        </a>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-label">📦 สิ่งที่ต้องเตรียม (สำหรับฝากขาย)</div>
+      <div style="font-size:13px; color: rgba(255,255,255,0.7);">
+        • รูปสกิน, เครื่องประดับ, สัตว์เลี้ยง, ของในคลัง, ยอดเติม, แรงค์<br>
+        • กรอกแบบฟอร์มที่ทางร้านเตรียมไว้ให้
+      </div>
+    </div>
+
+    <div id="contact">
+      <div class="sh"><span class="ico">💬</span><h2>ช่องทางติดต่อ</h2></div>
+      <div class="contact-box" style="text-align:center;">
+        <p style="margin-bottom:15px; font-size:14px;">Facebook : Ta Ray</p>
+        <a class="ct-link" style="max-width: 250px; margin: 0 auto;" href="https://www.facebook.com/share/1HXq3wncat/?mibextid=wwXIfr" target="_blank">
+          📘 ทักแชท Facebook
+        </a>
+      </div>
+    </div>
+
+    <div class="warn">
+      <span>⚠️</span> ลูกค้าโปรดอ่านรายละเอียดให้ครบถ้วนก่อนสั่งงานเพื่อความเข้าใจที่ตรงกันนะครับ
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">✦ Ta Ray Store ✦ บริการรับฝากขายและทำป้ายครบวงจร</div>
+  </div>
+</div>
+
+<script>
+  function toggleDrawer() {
+    const isOpen = document.getElementById('drawer').classList.contains('open');
+    isOpen ? closeDrawer() : openDrawer();
+  }
+  function openDrawer() {
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('hamBtn').classList.add('open');
+  }
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('hamBtn').classList.remove('open');
+  }
+
+  document.querySelectorAll('.dr-a[data-target]').forEach(a => {
+    a.addEventListener('click', () => {
+      const id = a.dataset.target;
+      const el = document.getElementById(id);
+      if (el) {
+        window.scrollTo({ top: el.offsetTop - 60, behavior: 'smooth' });
+      }
+      document.querySelectorAll('.dr-a').forEach(n => n.classList.remove('on'));
+      a.classList.add('on');
+      setTimeout(closeDrawer, 120);
+    });
+  });
+
+  // Particle script คงเดิมตามที่พี่ Eoy ชอบ
+  const P = document.getElementById('pts');
+  ['✦','★','🎮','✧','💎'].forEach(e => {
+    for (let j = 0; j < 3; j++) {
+      const d = document.createElement('div');
+      d.className = 'pt';
+      d.textContent = e;
+      d.style.cssText = `left:${Math.random()*100}vw;font-size:${10+Math.random()*8}px;color:${'#2b59ff,#6e8fff,#ffffff'.split(',')[Math.floor(Math.random()*3)]};animation-duration:${10+Math.random()*13}s;animation-delay:${-Math.random()*25}s;`;
+      P.appendChild(d);
+    }
+  });
+</script>
+</body>
+</html>
